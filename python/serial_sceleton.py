@@ -8,7 +8,7 @@ import csv
 sampling_time = float(sys.argv[1]) 
 sampling_period = float(sys.argv[2])
 dmm = None
-dmm = serial.Serial(port="/dev/ttyS0", baudrate=115200, timeout=sampling_period) #was 0.005
+dmm = serial.Serial(port="/dev/ttyS0", baudrate=115200, timeout=1) #was 0.005
 log_num = 0
 
 #with open("log0" + str(log_num) + ".csv", "w+") as log_file:
@@ -16,25 +16,27 @@ log_num = 0
 
 current_time = 0
 
-#def _readline(self):
-#    eol = b'\r'
-#    leneol = len(eol)
-#    line = bytearray()
-#    while True:
-#        c = self.ser.read(1)
-#        if c:
-#            line += c
-#            if line[-leneol:] == eol:
-#                break
-#        else:
-#            break
-#    return bytes(line)
+def _readline(self):
+    eol = b'\r'
+    leneol = len(eol)
+    line = bytearray()
+    while True:
+        char = self.read(1)
+        #print("char read" + char.decode("utf-8") + "\n")
+        if char:
+            line += char
+            if line[-leneol:] == eol:
+                break
+        else:
+            break
+    return bytes(line)
 
 def report(dmm):
     if dmm:
         dmm.write(b"read? buf\r")
 
-        rx_line = dmm.readline().decode("utf-8")
+        rx_line = _readline(dmm).decode("utf-8")
+        #rx_line = dmm._readline().decode("utf-8")
         #print(f"RX: {char}")
         reply_list = rx_line.split(',')
         str_value = reply_list[0].lower()
