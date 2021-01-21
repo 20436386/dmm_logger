@@ -1,20 +1,42 @@
 #!/usr/bin/python3
-#first commandline argument should be the sampling time and the second should be the sampling period
+##################################################################################
+#First commandline argument must be the name of the log file to be created.#######
+#The second must be signal being measured i.e. Voltage or Current. The third###### 
+# parameter must be either the value "AC" or "DC". the The fourth parameter must##
+# be the sampling duration and the fith should be the sampling period(note that ##
+# fastest sampling period appears to be 200ms)####################################
+##################################################################################
 import sys
 import serial
 import time
 import csv
+import os
+import matplotlib.pyplot as plt
+import numpy as np
 
-sampling_time = float(sys.argv[1]) 
-sampling_period = float(sys.argv[2])
+log_name = sys.argv[1]
+signal = sys.argv[2]
+mode = sys.argv[3]
+sampling_duration = float(sys.argv[4]) 
+sampling_period = float(sys.argv[5]) - 0.003525398 #executioon of program adds samplig error
+
 dmm = None
 dmm = serial.Serial(port="/dev/ttyS0", baudrate=115200, timeout=1) #was 0.005
-log_num = 0
-
-#with open("log0" + str(log_num) + ".csv", "w+") as log_file:
-#    log_writer = csv.writer(log_file, delimiter = ',')
-
+#copy_num = 0
 current_time = 0
+#graphin variables
+x_axis = []
+y_axis = []
+
+def graph():
+    plt.plot(x_axis, y_axis)
+    plt.title(signal + " vs " + "Time")
+    plt.xlabel('Time')
+    plt.ylabel(signal +'(' + mode + ')')
+    fig = plt.gcf()
+    fig.savefig(log_name + ".png")
+    plt.show()
+    
 
 def _readline(self):
     eol = b'\r'
@@ -36,26 +58,34 @@ def report(dmm):
         dmm.write(b"read? buf\r")
 
         rx_line = _readline(dmm).decode("utf-8")
-        #rx_line = dmm._readline().decode("utf-8")
         #print(f"RX: {char}")
         reply_list = rx_line.split(',')
         str_value = reply_list[0].lower()
         #print(f"{str_value}")
         return float(str_value)
 
-start_time = time.clock_gettime(time.CLOCK_BOOTTIME)
-current_time = (time.clock_gettime(time.CLOCK_BOOTTIME)) - start_time
-
-while(current_time <= sampling_time):
-    #print(f"Value: {report(dmm)}")
-    #print(f"current_time = ", current_time)
-    line = [current_time, report(dmm)]
-
-    with open("log0" + str(log_num) + ".csv", "a") as log_file:
-        log_writer = csv.writer(log_file,dialect='excel' )#,quoting= csv.QUOTE_NONNUMERIC)
-        log_writer.writerow(line)
-
+def main():
+    start_time = time.clock_gettime(time.CLOCK_BOOTTIME)
     current_time = (time.clock_gettime(time.CLOCK_BOOTTIME)) - start_time
-    time.sleep(sampling_period)
+    i = 0
 
+    while(current_time <= sampling_duration):
+        #print(f"Value: {report(dmm)}")
+        #print(f"current_time = ", current_time)
+        sample = report(dmm)
+        line = [current_time, sample]
+        x_axis.append(current_time)
+        y_axis.append(sample)
+
+        with open(log_name + ".csv", "a") as log_file:
+            log_writer = csv.writer(log_file,dialect='excel' )#,quoting= csv.QUOTE_NONNUMERIC)
+            log_writer.writerow(line)
+
+        current_time = (time.clock_gettime(time.CLOCK_BOOTTIME)) - start_time
+        time.sleep(sampling_period)
+    
+    graph()
+
+if __name__ == "__main__":
+    main()
 
