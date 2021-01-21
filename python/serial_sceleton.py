@@ -17,14 +17,13 @@ import numpy as np
 log_name = sys.argv[1]
 signal = sys.argv[2]
 mode = sys.argv[3]
+test = sys.argv[6]
+print(test)
 sampling_duration = float(sys.argv[4]) 
 sampling_period = float(sys.argv[5]) - 0.003525398 #executioon of program adds samplig error
-
-dmm = None
-dmm = serial.Serial(port="/dev/ttyS0", baudrate=115200, timeout=1) #was 0.005
 #copy_num = 0
 current_time = 0
-#graphin variables
+#graphing variables:
 x_axis = []
 y_axis = []
 
@@ -65,9 +64,11 @@ def report(dmm):
         return float(str_value)
 
 def main():
+    dmm = None
+    dmm = serial.Serial(port="/dev/ttyS0", baudrate=115200, timeout=1)
+
     start_time = time.clock_gettime(time.CLOCK_BOOTTIME)
     current_time = (time.clock_gettime(time.CLOCK_BOOTTIME)) - start_time
-    i = 0
 
     while(current_time <= sampling_duration):
         #print(f"Value: {report(dmm)}")
