@@ -13,14 +13,17 @@ import csv
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
 
-log_name = sys.argv[1]
-signal = sys.argv[2]
-mode = sys.argv[3]
-test = sys.argv[6]
-print(test)
-sampling_duration = float(sys.argv[4]) 
-sampling_period = float(sys.argv[5]) - 0.003525398 #executioon of program adds samplig error
+parser = argparse.ArgumentParser(description = "This program reads data from the GWINSTEK GDM-8261A multimeter over a RS232 connection. The data read is displayed as a graph and the raw data is stored in a .csv file - the graph is also stored as a .png file. Ensure that the multimater is connected and turned on(with the correct configuration setup on the actual device) before this program is run.")
+parser.add_argument("File_name", help = "The name of the csv file where measured data will be stored", type = str)
+parser.add_argument("Signal", type = str, help = "The signal being measured i.e. Voltage")
+parser.add_argument("Mode", type = str, help = "This can either be the value \"AC\" or \"DC\"")
+parser.add_argument("Sample_duration", type = float, help = "The duration over which the sampling takes place")
+parser.add_argument("Time_step", type = float, help = "The sampling period in seconds i.e. time between succesive samples")
+args = parser.parse_args()
+
+sampling_period = args.Time_step - 0.003525398 #executioon of program adds samplig error
 #copy_num = 0
 current_time = 0
 #graphing variables:
@@ -29,11 +32,11 @@ y_axis = []
 
 def graph():
     plt.plot(x_axis, y_axis)
-    plt.title(signal + " vs " + "Time")
+    plt.title(args.Signal + " vs " + "Time")
     plt.xlabel('Time')
-    plt.ylabel(signal +'(' + mode + ')')
+    plt.ylabel(args.Signal +'(' + args.Mode + ')')
     fig = plt.gcf()
-    fig.savefig(log_name + ".png")
+    fig.savefig(args.File_name + ".png")
     plt.show()
     
 
@@ -70,7 +73,7 @@ def main():
     start_time = time.clock_gettime(time.CLOCK_BOOTTIME)
     current_time = (time.clock_gettime(time.CLOCK_BOOTTIME)) - start_time
 
-    while(current_time <= sampling_duration):
+    while(current_time <= args.Sample_duration):
         #print(f"Value: {report(dmm)}")
         #print(f"current_time = ", current_time)
         sample = report(dmm)
@@ -78,7 +81,7 @@ def main():
         x_axis.append(current_time)
         y_axis.append(sample)
 
-        with open(log_name + ".csv", "a") as log_file:
+        with open(args.File_name + ".csv", "a") as log_file:
             log_writer = csv.writer(log_file,dialect='excel' )#,quoting= csv.QUOTE_NONNUMERIC)
             log_writer.writerow(line)
 

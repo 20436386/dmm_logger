@@ -6,6 +6,7 @@
 # be the sampling duration and the fith should be the sampling period(note that ##
 # fastest sampling period appears to be 200ms)####################################
 ##################################################################################
+#argparse checkout
 import sys
 import serial
 import time
